@@ -208,4 +208,20 @@ mod tests {
         assert_eq!(output, expected_output)
     }
 
+    #[test]
+    fn test_join_tab(){
+        let input = vec!["foo","bar"];
+        let expected_output = "foo\tbar";
+        let output = input.join("\t");
+        assert_eq!(output, expected_output)
+    }
+
+    #[test]
+    fn test_join_comma(){
+        let input = vec!["foo","bar"];
+        let expected_output = "foo,bar";
+        let output = input.join(",");
+        assert_eq!(output, expected_output)
+    }
+
 }
