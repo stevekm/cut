@@ -1,0 +1,15 @@
+utah
+*target/*
+ncbiRefSeq.txt
+old_Cargo.toml
+*target/*
+*/target/*
+target/*
+*target/*
+*/target/*
+*/target/*
+**/target/*
+misc/main
+.DS_Store
+.project_log.tsv
+doc
