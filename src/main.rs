@@ -224,4 +224,26 @@ mod tests {
         assert_eq!(output, expected_output)
     }
 
+    #[test]
+    fn test_cut_line1(){
+        let fields_str = "1-3,5";
+        let delimiter = "\t";
+        let indexes = fields_to_indexes(get_fields(fields_str));
+        let input = "foo\tbar\tbaz\tbuzz\tfuzz\twaz";
+        let expected_output = "foo\tbar\tbaz\tfuzz";
+        let output = subset_line_parts(split_line(input, delimiter), indexes).join(delimiter);
+        assert_eq!(output, expected_output)
+    }
+
+    #[test]
+    fn test_cut_line2(){
+        let fields_str = "1-3,5";
+        let delimiter = ",";
+        let indexes = fields_to_indexes(get_fields(fields_str));
+        let input = "foo,bar,baz,buzz,fuzz,waz";
+        let expected_output = "foo,bar,baz,fuzz";
+        let output = subset_line_parts(split_line(input, delimiter), indexes).join(delimiter);
+        assert_eq!(output, expected_output)
+    }
+
 }
