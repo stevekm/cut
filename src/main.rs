@@ -61,9 +61,9 @@ fn split_line<'a>(line: &'a str, delimiter: &'a str) -> Vec<&'a str> {
     output
 }
 
-fn subset_line_parts(parts: Vec<& str>, indexes: Vec<u32>) -> Vec<& str> {
+fn subset_line_parts<'a>(parts: &'a [&str], indexes: &[u32]) -> Vec<&'a str> {
     // get only the indexed vector elements
-    let output = indexes.iter().map(|&index| parts[usize::try_from(index).unwrap()]).collect::<Vec<&str>>();
+    let output = indexes.iter().map(|index| parts[usize::try_from(*index).unwrap()]).collect::<Vec<&str>>();
     output
 }
 
@@ -96,8 +96,10 @@ fn main()  {
     for line in reader.get().lines() {
         match line {
             Ok(l) => {
-                let parts = split_line(&l, delimiter);
-                println!("{:?}", parts);
+                let parts = split_line(&l, &delimiter);
+                let subset = subset_line_parts(&parts, &indexes);
+                let output = subset.join(delimiter);
+                println!("{:?}", output);
             }
             Err(e) => println!("error parsing line: {:?}", e),
         }
@@ -126,7 +128,7 @@ mod tests {
         let input = "foo\tbar";
         let expected_output = vec!["foo", "bar"];
         let delimiter = "\t";
-        let output = split_line(input, delimiter);
+        let output = split_line(&input, &delimiter);
         assert_eq!(output, expected_output)
     }
 
@@ -135,7 +137,7 @@ mod tests {
         let input = "foo,bar";
         let expected_output = vec!["foo", "bar"];
         let delimiter = ",";
-        let output = split_line(input, delimiter);
+        let output = split_line(&input, &delimiter);
         assert_eq!(output, expected_output)
     }
 
@@ -144,7 +146,7 @@ mod tests {
         let input = "foo|bar";
         let expected_output = vec!["foo", "bar"];
         let delimiter = "|";
-        let output = split_line(input, delimiter);
+        let output = split_line(&input, &delimiter);
         assert_eq!(output, expected_output)
     }
 
@@ -185,7 +187,7 @@ mod tests {
         let parts = vec!["foo", "bar", "baz"];
         let indexes = vec![1,2]; // not the same as fields; off by 1
         let expected_output = vec!["bar", "baz"];
-        let output = subset_line_parts(parts, indexes);
+        let output = subset_line_parts(&parts, &indexes);
         assert_eq!(output, expected_output)
     }
 
@@ -204,7 +206,7 @@ mod tests {
         let indexes = fields_to_indexes(fields);
         let parts = vec!["foo", "bar", "baz", "buzz", "fuzz", "waz"];
         let expected_output = vec!["foo", "bar", "baz", "fuzz"];
-        let output = subset_line_parts(parts, indexes);
+        let output = subset_line_parts(&parts, &indexes);
         assert_eq!(output, expected_output)
     }
 
@@ -231,7 +233,7 @@ mod tests {
         let indexes = fields_to_indexes(get_fields(fields_str));
         let input = "foo\tbar\tbaz\tbuzz\tfuzz\twaz";
         let expected_output = "foo\tbar\tbaz\tfuzz";
-        let output = subset_line_parts(split_line(input, delimiter), indexes).join(delimiter);
+        let output = subset_line_parts(&split_line(&input, &delimiter), &indexes).join(delimiter);
         assert_eq!(output, expected_output)
     }
 
@@ -242,7 +244,7 @@ mod tests {
         let indexes = fields_to_indexes(get_fields(fields_str));
         let input = "foo,bar,baz,buzz,fuzz,waz";
         let expected_output = "foo,bar,baz,fuzz";
-        let output = subset_line_parts(split_line(input, delimiter), indexes).join(delimiter);
+        let output = subset_line_parts(&split_line(input, delimiter), &indexes).join(delimiter);
         assert_eq!(output, expected_output)
     }
 
