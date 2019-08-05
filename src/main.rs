@@ -51,6 +51,11 @@ fn get_fields(fields_str: &str) -> Vec<u32> {
 
     }
 
+    // do not allow 0 values
+    if values.iter().any(|v| v.clone() == 0) {
+        panic!("Zero value not allowed in field range")
+    }
+
     values
 }
 
@@ -152,13 +157,13 @@ mod tests {
         assert_eq!(output, expected_output)
     }
 
-    #[test]
-    fn test_get_fields_0(){
-        let fields_str = "0";
-        let expected_output = vec![0];
-        let output = get_fields(fields_str);
-        assert_eq!(output, expected_output)
-    }
+    // #[test]
+    // fn test_get_fields_0(){
+    //     let fields_str = "0";
+    //     let expected_output = vec![0];
+    //     let output = get_fields(fields_str);
+    //     assert_eq!(output, expected_output)
+    // }
 
     #[test]
     fn test_get_fields_multi(){
@@ -248,6 +253,14 @@ mod tests {
         let expected_output = "foo,bar,baz,fuzz";
         let output = subset_line_parts(&split_line(input, delimiter), &indexes).join(delimiter);
         assert_eq!(output, expected_output)
+    }
+
+
+    #[test]
+    #[should_panic]
+    fn test_field_0(){
+        let fields_str = "0";
+        let indexes = get_fields(fields_str);
     }
 
 }
