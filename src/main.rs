@@ -77,11 +77,12 @@ fn main()  {
     let matches = App::new("cut")
                         .about("GNU cut clone")
                         .arg(Arg::with_name("inputFile")
-                           .help("The input file to use")
-                           .index(1))
+                            .help("The input file to use")
+                            .index(1))
                         .arg(Arg::with_name("fields")
+                            .takes_value(true)
                             .help("The fields to output")
-                          .short("f"))
+                            .short("f"))
                       .arg(Arg::with_name("delimiter")
                           .help("Field delimiter")
                         .short("d"))
@@ -99,7 +100,7 @@ fn main()  {
                 let parts = split_line(&l, &delimiter);
                 let subset = subset_line_parts(&parts, &indexes);
                 let output = subset.join(delimiter);
-                println!("{:?}", output);
+                println!("{}", output);
             }
             Err(e) => println!("error parsing line: {:?}", e),
         }
