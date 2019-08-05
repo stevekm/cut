@@ -18,6 +18,49 @@ impl Reader {
     }
 }
 
+// whether to split on text character fields or bytes (not implemented yet)
+#[derive(Debug)]
+enum OperatingMode {
+    Fields
+}
+
+#[derive(Debug)]
+struct Config {
+    mode: OperatingMode,
+    input: String,
+    fields: FieldList,
+    delimiter: String,
+}
+
+// a list of the fields to output from each line,
+#[derive(Debug)]
+struct FieldList {
+    fields: Vec<FieldValue>
+}
+
+#[derive(Debug)]
+enum FieldValue {
+    Value(Value), // a single field value
+    Range1(Range1), // a range that starts at the given index and extends to the end of the line
+    Range2(Range2) // a start and stop range
+}
+
+#[derive(Debug)]
+struct Value {
+    value: u32
+}
+
+#[derive(Debug)]
+struct Range1 {
+    start: u32
+}
+
+#[derive(Debug)]
+struct Range2 {
+    start: u32,
+    stop: u32,
+}
+
 fn parse_int(number_str: &str) -> u32 {
     // convert string to int
     let number = number_str.parse::<u32>().expect(format!("Failed to parse {}", number_str).as_str());
@@ -78,6 +121,84 @@ fn fields_to_indexes(fields: Vec<u32>) -> Vec<u32> {
     indexes
 }
 
+// for refactored method for outputting lines
+fn make_field_list(fields_str: &str) -> FieldList {
+    let mut fields = Vec::new();
+
+    // first split comma separated components
+    let fields_parts = fields_str.split(",").collect::<Vec<&str>>();
+    for part in fields_parts {
+        // check for '-' indicating a range
+        if part.contains("-"){
+            let subparts = part.split("-").filter(|&i|i != "").collect::<Vec<&str>>();
+            if subparts.len() == 2 {
+                // a Range with a defined Start and Stop
+                // println!("{:?}",subparts);
+                let start = parse_int(&subparts[0]);
+                let stop = parse_int(&subparts[1]);
+                fields.push(FieldValue::Range2(Range2 { start: start, stop: stop } ));
+            } else if subparts.len() == 1 {
+                // a Range that goes to the end of the line
+                let start = parse_int(&subparts[0]);
+                fields.push(FieldValue::Range1(Range1 { start: start } ));
+            } else {
+                panic!("Could not parse '{}'", part);
+            }
+        } else {
+            let parsed = parse_int(&part);
+            fields.push(FieldValue::Value( Value { value: parsed } ));
+        }
+    }
+
+    let output = FieldList { fields: fields };
+    output
+}
+
+fn indexes_to_print(fields: &FieldList, delimiter: &str, line: &str) -> Vec<u32> {
+    let mut indexes = Vec::new();
+    let num_fields = line.matches(delimiter).count();
+
+    for field in fields.fields {
+        match field {
+            FieldValue::Value(value) => {
+                if value =< num_fields {
+                    indexes.push(value)
+                }
+            },
+            FieldValue::Range1(start) => {
+                if start < num_fields {
+                    for num in (std::ops::Range {start: start, end: num_fields + 1}){
+                        indexes.push(num);
+                    }
+                } else if start == num_fields {
+                    indexes.push(start);
+                }
+            },
+            FieldValue::Range2(start, stop) => {
+                if start < num_fields {
+                    if stop =< num_fields {
+                        for num in (std::ops::Range {start: start, end: stop + 1}){
+                            indexes.push(num);
+                        }
+                    } else {
+                        for num in (std::ops::Range {start: start, end: num_fields + 1}){
+                            indexes.push(num);
+                        }
+                    }
+                } else if start == num_fields {
+                    indexes.push(start);
+                }
+            }
+        }
+    }
+    indexes
+}
+//
+//
+// fn format_output_line(fields: &FieldList, delimiter: &str, line: &str) -> {
+//
+// }
+
 fn main()  {
     let matches = App::new("cut")
                         .about("GNU cut clone")
@@ -99,6 +220,21 @@ fn main()  {
     let delimiter = matches.value_of("delimiter").unwrap_or("\t");
     let reader = Reader { input: inputFile.to_string() };
     let indexes = fields_to_indexes(get_fields(fields));
+
+    let field_list = make_field_list(&fields.to_string());
+    // let field_list = make_field_list(&"1,4-".to_string());
+    // println!("{:?}", field_list);
+    // println!("{:?}", field_list.fields);
+    // println!("{:?}", field_list.fields[0]);
+    // println!("{:?}", field_list.fields[0].value);
+    //
+    let config = Config {
+        mode: OperatingMode::Fields,
+        input: inputFile.to_string(),
+        delimiter: delimiter.to_string(),
+        fields: field_list,
+    };
+    // println!("{:?}", config.fields.fields);
 
     for line in reader.get().lines() {
         match line {
@@ -156,14 +292,6 @@ mod tests {
         let output = split_line(&input, &delimiter);
         assert_eq!(output, expected_output)
     }
-
-    // #[test]
-    // fn test_get_fields_0(){
-    //     let fields_str = "0";
-    //     let expected_output = vec![0];
-    //     let output = get_fields(fields_str);
-    //     assert_eq!(output, expected_output)
-    // }
 
     #[test]
     fn test_get_fields_multi(){
@@ -255,12 +383,41 @@ mod tests {
         assert_eq!(output, expected_output)
     }
 
-
     #[test]
     #[should_panic]
     fn test_field_0(){
         let fields_str = "0";
         let indexes = get_fields(fields_str);
     }
+
+    #[test]
+    fn test_indexes_to_print(){
+        let fields_str = "1,4-";
+        let input = "foo\tbar\tbaz\tbuzz\tfuzz\twaz";
+        let expected_output = vec![1,4,5,6];
+        let field_list = make_field_list(&fields_str);
+        let output = indexes_to_print();
+        // let expected_output = "foo\tbuzz\tfuzz\twaz";
+        // let expected_output = FieldList {
+        //     fields: vec![
+        //     FieldValue::Value(Value {value: 1}),
+        //     FieldValue::Range1(Range1 {start: 4})
+        //     ]
+        // };
+        // let field_list = make_field_list(&fields_str)
+        // let output = format_output_line();
+        // println!("{:?}", output);
+        // assert_eq!(output.fields[1], expected_output.fields[1])
+        // assert_eq!(output.fields[0].value, 1)
+    }
+    // fn test_field_range_dash(){
+        // let fields_str = "1,4-";
+    //     let delimiter = "\t";
+    //     let input = "foo\tbar\tbaz\tbuzz\tfuzz\twaz";
+    //     let indexes = indexes_to_print(fields_str, delimiter, input);
+
+    //     let output = format_output_line(indexes, input);
+    //     assert_eq!(output, expected_output)
+    // }
 
 }
