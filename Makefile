@@ -7,8 +7,7 @@ update:
 	rustup self update
 
 run:
-	printf 'foo1\tfoo2\tfoo3\nbar1\tbar2\tbar3\n' | cargo run
-	cargo run data.tsv
+	printf 'foo1\tfoo2\tfoo3\nbar1\tbar2\tbar3\n' | cargo run -- -f 1
 	cargo run data.tsv -f 1
 	cargo run data.tsv -f 1,2
 	cargo run data.tsv -f 1,2,5-8

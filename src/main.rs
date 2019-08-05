@@ -81,6 +81,7 @@ fn main()  {
                             .index(1))
                         .arg(Arg::with_name("fields")
                             .takes_value(true)
+                            .required(true)
                             .help("The fields to output")
                             .short("f"))
                       .arg(Arg::with_name("delimiter")
