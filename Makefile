@@ -11,6 +11,7 @@ run:
 	cargo run data.tsv -f 1
 	cargo run data.tsv -f 1,2
 	cargo run data.tsv -f 1,2,5-8
+	cargo run data.tsv -f 2,6-
 
 test:
 	cargo test
