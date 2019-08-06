@@ -6,6 +6,9 @@ update:
 	rustup update
 	rustup self update
 
+build:
+	cargo build
+
 run:
 	printf 'foo1\tfoo2\tfoo3\nbar1\tbar2\tbar3\n' | cargo run -- -f 1
 	cargo run data.tsv -f 1
