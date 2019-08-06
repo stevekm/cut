@@ -1,7 +1,7 @@
 extern crate clap;
 use clap::{Arg, App};
 use std::io::{self, BufReader, BufRead};
-use std::fs::{self, File};
+use std::fs::{self};
 use std::convert::TryFrom;
 
 struct Reader {
