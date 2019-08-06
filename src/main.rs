@@ -87,8 +87,14 @@ impl FieldList {
         let mut values = Vec::new();
         for field in &self.fields {
             let (start, stop) = field.get_field_range(&max);
-            for num in (std::ops::Range {start: start.clone(), end: stop.clone() + 1 }){
-                values.push(num);
+            if stop >= start {
+                for num in (std::ops::Range {start: start.clone(), end: stop.clone() + 1 }){
+                    values.push(num);
+                }
+            } else {
+                for num in (std::ops::Range {start: stop.clone(), end: start.clone() + 1 }).rev(){
+                    values.push(num);
+                }
             }
         }
         // do not include 0 values
@@ -474,6 +480,17 @@ mod tests {
         let field_list = FieldList { fields: fields };
         let output = field_list.get_indexes(&max);
         let expected_output = vec![1,2,3];
+        assert_eq!(output, expected_output)
+    }
+
+    #[test]
+    fn test_field_list_indexes5rev(){
+        let max = 5;
+        let mut fields = Vec::new();
+        fields.push(FieldRange::Range2((4,2)));
+        let field_list = FieldList { fields: fields };
+        let output = field_list.get_indexes(&max);
+        let expected_output = vec![3,2,1];
         assert_eq!(output, expected_output)
     }
 
